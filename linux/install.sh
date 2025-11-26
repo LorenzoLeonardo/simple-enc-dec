@@ -42,9 +42,16 @@ cargo build --release || { echo "cargo build failed"; exit 1; }
 echo "Installing new packages..."
 sudo mkdir -p "$DEST_DIR"
 sudo cp "$PWD/target/release/$EXECUTABLE_NAME" "$DEST_DIR"
-sudo cp "$PWD/target/release/$EXECUTABLE_NAME" "$DEST_DIR"
+sudo cp "$PWD/target/release/decode" "$DEST_DIR"
+sudo cp "$PWD/target/release/encode" "$DEST_DIR"
+sudo cp "$PWD/target/release/encrypt" "$DEST_DIR"
+sudo cp "$PWD/target/release/decrypt" "$DEST_DIR"
 sudo cp "$PWD/linux/systemd/$SERVICE_NAME" "/etc/systemd/system/$SERVICE_NAME"
 sudo chmod +x "$DEST_DIR/$EXECUTABLE_NAME"
+sudo chmod +x "$DEST_DIR/decode"
+sudo chmod +x "$DEST_DIR/encode"
+sudo chmod +x "$DEST_DIR/encrypt"
+sudo chmod +x "$DEST_DIR/decrypt"
 
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
