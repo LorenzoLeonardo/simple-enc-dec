@@ -132,9 +132,9 @@ mod tests {
         let codec = Base52Codec;
         for b in 0u8..=255 {
             let input = [b];
-            let encoded = codec.encode(&input);
+            let encoded = codec.encode(input);
             let decoded = codec.decode(&encoded).unwrap();
-            assert_eq!(decoded, input, "Failed for byte value: {}", b);
+            assert_eq!(decoded, input, "Failed for byte value: {b}");
         }
     }
 
@@ -159,7 +159,7 @@ mod tests {
             rng.fill_bytes(&mut input);
             let encoded = codec.encode(&input);
             let decoded = codec.decode(&encoded).unwrap();
-            assert_eq!(decoded, input, "Failed for size: {}", size);
+            assert_eq!(decoded, input, "Failed for size: {size}");
         }
     }
 
@@ -171,7 +171,7 @@ mod tests {
 
         for &input in &invalid_inputs {
             let result = codec.decode(input);
-            assert!(result.is_err(), "Invalid input '{}' should error", input);
+            assert!(result.is_err(), "Invalid input '{input}' should error");
         }
     }
 
@@ -196,11 +196,10 @@ mod tests {
             if input.iter().all(|&b| b == 0) {
                 assert_eq!(
                     decoded, input,
-                    "Round-trip failed for all-zero input {:?}",
-                    input
+                    "Round-trip failed for all-zero input {input:?}"
                 );
             } else {
-                assert_eq!(decoded, input, "Round-trip failed for input {:?}", input);
+                assert_eq!(decoded, input, "Round-trip failed for input {input:?}");
             }
         }
     }
