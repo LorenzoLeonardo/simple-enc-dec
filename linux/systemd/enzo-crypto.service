@@ -1,0 +1,14 @@
+[Unit]
+Description=Enzo Crypto
+After=network-online.target ipc-broker.service
+Wants=network-online.target ipc-broker.service
+
+[Service]
+Environment=HOME=/home/lleonardo
+WorkingDirectory=/home/lleonardo/bin/simple-enc-dec
+ExecStart=/home/lleonardo/bin/simple-enc-dec/crypto
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
