@@ -13,7 +13,6 @@ fn derive_key(password: &str) -> Vec<u8> {
 
 pub fn encrypt(plaintext: &str, password: &str) -> Result<String, Box<dyn Error>> {
     let key = derive_key(password);
-    println!("[encrypt] Derived Key: {:x?}", key);
     let iv = [0u8; 16]; // 16 zero bytes IV
 
     let cipher = Cipher::aes_256_cbc();
@@ -21,7 +20,7 @@ pub fn encrypt(plaintext: &str, password: &str) -> Result<String, Box<dyn Error>
     let mut crypter = Crypter::new(cipher, Mode::Encrypt, &key, Some(&iv))?;
     crypter.pad(true);
 
-    println!("[encrypt] Cipher Block Size: {}", cipher.block_size());
+    log::info!("[encrypt] Cipher Block Size: {}", cipher.block_size());
     let mut ciphertext = vec![0; plaintext.len() + cipher.block_size()];
     let mut count = crypter.update(plaintext.as_bytes(), &mut ciphertext)?;
     count += crypter.finalize(&mut ciphertext[count..])?;
@@ -32,7 +31,6 @@ pub fn encrypt(plaintext: &str, password: &str) -> Result<String, Box<dyn Error>
 
 pub fn decrypt(ciphertext_b64: &str, password: &str) -> Result<String, Box<dyn Error>> {
     let key = derive_key(password);
-    println!("[decrypt] Derived Key: {:x?}", key);
     let iv = [0u8; 16];
 
     let cipher = Cipher::aes_256_cbc();
@@ -42,7 +40,7 @@ pub fn decrypt(ciphertext_b64: &str, password: &str) -> Result<String, Box<dyn E
     let mut crypter = Crypter::new(cipher, Mode::Decrypt, &key, Some(&iv))?;
     crypter.pad(true);
 
-    println!("[decrypt] Cipher Block Size: {}", cipher.block_size());
+    log::info!("[decrypt] Cipher Block Size: {}", cipher.block_size());
     let mut plaintext = vec![0; ciphertext.len() + cipher.block_size()];
     let mut count = crypter.update(&ciphertext, &mut plaintext)?;
     count += crypter.finalize(&mut plaintext[count..])?;
