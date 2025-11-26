@@ -1,3 +1,5 @@
+pub mod base52;
+
 use base64::{Engine as _, engine::general_purpose};
 
 use openssl::hash::{MessageDigest, hash};
