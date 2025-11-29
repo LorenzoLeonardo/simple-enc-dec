@@ -5,7 +5,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() != 3 {
-        eprintln!("Usage: {} <base64 string>", args[0]);
+        log::error!("Usage: {} <plaintext> <password>", args[0]);
         std::process::exit(1);
     }
 
@@ -13,7 +13,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let password = &args[2];
 
     let base64_cipher_text = scrypt::encrypt_base64(plaintext.as_bytes(), password)?;
-    println!("[Encrypted Text] {base64_cipher_text}");
+    log::info!("[Encrypted Text] {base64_cipher_text}");
 
     Ok(())
 }

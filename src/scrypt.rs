@@ -28,7 +28,7 @@ fn derive_key_scrypt(password: &str, salt: &[u8]) -> Result<Vec<u8>> {
         &mut key,
     )
     .map_err(|e| anyhow!("scrypt failed: {e}"))?;
-    println!(
+    log::info!(
         "Derived key (hex): {}",
         key.iter()
             .map(|b| format!("{b:02x}"))

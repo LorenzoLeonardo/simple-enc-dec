@@ -5,14 +5,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().collect();
 
     if args.len() != 2 {
-        eprintln!("Usage: {} <base64 string>", args[0]);
+        log::error!("Usage: {} <base64 string>", args[0]);
         std::process::exit(1);
     }
 
     let base64 = &args[1];
 
     let decoded = general_purpose::STANDARD.decode(base64)?;
-    println!(
+    log::info!(
         "[Decoded Text] {}",
         decoded.iter().map(|&b| b as char).collect::<String>()
     );

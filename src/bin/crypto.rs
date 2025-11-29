@@ -7,7 +7,7 @@ use fern::Dispatch;
 use ipc_broker::worker::{SharedObject, WorkerBuilder};
 use log::LevelFilter;
 use serde_json::{Value, json};
-use simple_enc_dec::{base52::Base52Codec, decrypt, encrypt};
+use simple_enc_dec::{base52::Base52Codec, decrypt, encrypt, scrypt};
 
 #[derive(serde::Deserialize)]
 struct Param {
@@ -110,6 +110,25 @@ impl SharedObject for Crypto {
             }
             "decode52" => Crypto::decode_base52(&param.input),
             "encode52" => Crypto::encode_base52(&param.input),
+            "scrypt-encrypt" => {
+                log::info!("Encrypting input: {}", param.input);
+                if let Some(err) = Crypto::require_passphrase(&param.passphrase) {
+                    log::error!("Passphrase missing for encryption");
+                    return err;
+                }
+                Crypto::wrap_result(scrypt::encrypt_base64(
+                    param.input.as_bytes(),
+                    &param.passphrase,
+                ))
+            }
+            "scrypt-decrypt" => {
+                log::info!("Decrypting input: {}", param.input);
+                if let Some(err) = Crypto::require_passphrase(&param.passphrase) {
+                    log::error!("Passphrase missing for decryption");
+                    return err;
+                }
+                Crypto::wrap_result(scrypt::decrypt_base64(&param.input, &param.passphrase))
+            }
             _ => {
                 let msg = format!("Unknown method called: {method}");
                 log::warn!("{msg}");
