@@ -2,13 +2,9 @@
 
 Small collection of Rust utilities for simple encryption, decryption and a custom Base52 encoder/decoder.
 
-Badges
-- CI (replace OWNER/REPO):  
-  - Linux: https://github.com/OWNER/REPO/actions/workflows/rust-linux.yml/badge.svg  
-  - macOS: https://github.com/OWNER/REPO/actions/workflows/rust-macos.yml/badge.svg  
-  - Windows: https://github.com/OWNER/REPO/actions/workflows/rust-windows.yml/badge.svg
-- crates.io: https://img.shields.io/crates/v/enzo-crypto (if published)  
-- docs.rs: https://docs.rs/enzo-crypto (if published)
+![Linux](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-linux.yml/badge.svg)
+![macOS](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-macos.yml/badge.svg)
+![Windows](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-windows.yml/badge.svg)
 
 Overview
 - Library provides AES-based encrypt/decrypt helpers and a small scrypt-based wrapper for password-derived encryption.
