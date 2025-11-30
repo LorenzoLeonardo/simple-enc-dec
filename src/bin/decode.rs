@@ -12,10 +12,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let base64 = &args[1];
 
     let decoded = general_purpose::STANDARD.decode(base64)?;
-    println!(
-        "[Decoded Text] {}",
-        decoded.iter().map(|&b| b as char).collect::<String>()
-    );
+    println!("[Decoded Text] {}", String::from_utf8(decoded)?);
 
     Ok(())
 }
