@@ -3,11 +3,11 @@ use std::path::Path;
 use async_trait::async_trait;
 use base64::{Engine, engine::general_purpose};
 use chrono::Local;
+use enzo_crypto::{base52::Base52Codec, decrypt, encrypt, scrypt};
 use fern::Dispatch;
 use ipc_broker::worker::{SharedObject, WorkerBuilder};
 use log::LevelFilter;
 use serde_json::{Value, json};
-use simple_enc_dec::{base52::Base52Codec, decrypt, encrypt, scrypt};
 
 #[derive(serde::Deserialize)]
 struct Param {

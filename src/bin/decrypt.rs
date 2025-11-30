@@ -1,5 +1,5 @@
-use simple_enc_dec::decrypt;
-use std::error::Error; // assuming your crate name is simple_enc_dec
+use enzo_crypto::decrypt;
+use std::error::Error; // assuming your crate name is enzo_crypto
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().collect();

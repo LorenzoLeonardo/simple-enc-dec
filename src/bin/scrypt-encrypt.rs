@@ -1,4 +1,4 @@
-use simple_enc_dec::{self, scrypt};
+use enzo_crypto::{self, scrypt};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
