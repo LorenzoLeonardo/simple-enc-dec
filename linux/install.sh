@@ -48,6 +48,9 @@ sudo cp "$PWD/target/release/encrypt" "$DEST_DIR"
 sudo cp "$PWD/target/release/decrypt" "$DEST_DIR"
 sudo cp "$PWD/target/release/decode52" "$DEST_DIR"
 sudo cp "$PWD/target/release/encode52" "$DEST_DIR"
+sudo cp "$PWD/target/release/scrypt-decrypt" "$DEST_DIR"
+sudo cp "$PWD/target/release/scrypt-encrypt" "$DEST_DIR"
+
 sudo cp "$PWD/linux/systemd/$SERVICE_NAME" "/etc/systemd/system/$SERVICE_NAME"
 sudo chmod +x "$DEST_DIR/$EXECUTABLE_NAME"
 sudo chmod +x "$DEST_DIR/decode"
@@ -56,6 +59,8 @@ sudo chmod +x "$DEST_DIR/encrypt"
 sudo chmod +x "$DEST_DIR/decrypt"
 sudo chmod +x "$DEST_DIR/decode52"
 sudo chmod +x "$DEST_DIR/encode52"
+sudo chmod +x "$DEST_DIR/scrypt-decrypt"
+sudo chmod +x "$DEST_DIR/scrypt-encrypt"
 
 sudo systemctl daemon-reload
 sudo systemctl enable "$SERVICE_NAME"
