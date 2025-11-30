@@ -26,8 +26,8 @@ echo "Copying new files to remote destination . . ."
 scp -i $SSH_KEY_PATH $PWD/target/release/$EXECUTABLE_NAME $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/encrypt $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/decrypt $REMOTE_PC:$REMOTE_DEST_DIR
-scp -i $SSH_KEY_PATH $PWD/target/release/encode $REMOTE_PC:$REMOTE_DEST_DIR
-scp -i $SSH_KEY_PATH $PWD/target/release/decode $REMOTE_PC:$REMOTE_DEST_DIR
+scp -i $SSH_KEY_PATH $PWD/target/release/encode64 $REMOTE_PC:$REMOTE_DEST_DIR
+scp -i $SSH_KEY_PATH $PWD/target/release/decode64 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/encode52 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/decode52 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/scrypt-decrypt $REMOTE_PC:$REMOTE_DEST_DIR
@@ -40,9 +40,9 @@ ssh -i $SSH_KEY_PATH $REMOTE_PC \
     "chmod +x $REMOTE_DEST_DIR/$EXECUTABLE_NAME; \
      chmod +x $REMOTE_DEST_DIR/encrypt; \
      chmod +x $REMOTE_DEST_DIR/decrypt; \
-     chmod +x $REMOTE_DEST_DIR/decode; \
+     chmod +x $REMOTE_DEST_DIR/decode64; \
      chmod +x $REMOTE_DEST_DIR/decode52; \
-     chmod +x $REMOTE_DEST_DIR/encode; \
+     chmod +x $REMOTE_DEST_DIR/encode64; \
      chmod +x $REMOTE_DEST_DIR/encode52; \
      chmod +x $REMOTE_DEST_DIR/scrypt-decrypt; \
      chmod +x $REMOTE_DEST_DIR/scrypt-encrypt"
