@@ -127,7 +127,11 @@ impl SharedObject for Crypto {
                     log::error!("Passphrase missing for decryption");
                     return err;
                 }
-                Crypto::wrap_result(scrypt::decrypt_base64(&param.input, &param.passphrase))
+                Crypto::wrap_result(
+                    scrypt::decrypt_base64(&param.input, &param.passphrase)
+                        .map_err(|e| e.to_string())
+                        .and_then(|bytes| String::from_utf8(bytes).map_err(|e| e.to_string())),
+                )
             }
             _ => {
                 let msg = format!("Unknown method called: {method}");
