@@ -99,6 +99,32 @@ impl Crypto {
         CryptoResult::success(general_purpose::STANDARD.encode(input.as_bytes()).into()).into()
     }
 
+    /// Base64 decode helper
+    fn decode_base64_nopad(input: Cow<'_, str>) -> Value {
+        log::info!("Decoding base64 no padding input: {input}");
+        let res = general_purpose::STANDARD_NO_PAD
+            .decode(input.as_bytes())
+            .map_err(|e| Cow::Owned::<String>(e.to_string()))
+            .and_then(|bytes| {
+                String::from_utf8(bytes)
+                    .map(Cow::Owned)
+                    .map_err(|e| Cow::Owned(e.to_string()))
+            });
+
+        Self::wrap_result(res, Code::DecodeError)
+    }
+
+    /// Base64 encode helper
+    fn encode_base64_nopad(input: Cow<'_, str>) -> Value {
+        log::info!("Encoding base64 no padding input: {input}");
+        CryptoResult::success(
+            general_purpose::STANDARD_NO_PAD
+                .encode(input.as_bytes())
+                .into(),
+        )
+        .into()
+    }
+
     /// Require passphrase or return error JSON with caller-provided error code
     fn require_passphrase(passphrase: &str, rc: Code) -> Option<CryptoResult<'_>> {
         if passphrase.is_empty() {
@@ -150,6 +176,8 @@ impl SharedObject for Crypto {
         match method {
             "decode64" => Crypto::decode_base64(param.input),
             "encode64" => Crypto::encode_base64(param.input),
+            "decode64-nopad" => Crypto::decode_base64_nopad(param.input),
+            "encode64-nopad" => Crypto::encode_base64_nopad(param.input),
             "encrypt" => {
                 log::info!("Encrypting input: {}", param.input);
                 if let Some(err) = Crypto::require_passphrase(&param.passphrase, Code::EncryptError)

@@ -27,7 +27,9 @@ scp -i $SSH_KEY_PATH $PWD/target/release/$EXECUTABLE_NAME $REMOTE_PC:$REMOTE_DES
 scp -i $SSH_KEY_PATH $PWD/target/release/encrypt $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/decrypt $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/encode64 $REMOTE_PC:$REMOTE_DEST_DIR
-scp -i $SSH_KEY_PATH $PWD/target/release/decode64 $REMOTE_PC:$REMOTE_DEST_DIR
+scp -i $SSH_KEY_PATH $PWD/target/release/decode64 $REMOTE_PC:$
+scp -i $SSH_KEY_PATH $PWD/target/release/encode64-nopad $REMOTE_PC:$REMOTE_DEST_DIR
+scp -i $SSH_KEY_PATH $PWD/target/release/decode64-nopad $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/encode52 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/decode52 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/scrypt-decrypt $REMOTE_PC:$REMOTE_DEST_DIR
@@ -41,8 +43,10 @@ ssh -i $SSH_KEY_PATH $REMOTE_PC \
      chmod +x $REMOTE_DEST_DIR/encrypt; \
      chmod +x $REMOTE_DEST_DIR/decrypt; \
      chmod +x $REMOTE_DEST_DIR/decode64; \
-     chmod +x $REMOTE_DEST_DIR/decode52; \
      chmod +x $REMOTE_DEST_DIR/encode64; \
+     chmod +x $REMOTE_DEST_DIR/decode64-nopad; \
+     chmod +x $REMOTE_DEST_DIR/encode64-nopad; \
+     chmod +x $REMOTE_DEST_DIR/decode52; \
      chmod +x $REMOTE_DEST_DIR/encode52; \
      chmod +x $REMOTE_DEST_DIR/scrypt-decrypt; \
      chmod +x $REMOTE_DEST_DIR/scrypt-encrypt"
