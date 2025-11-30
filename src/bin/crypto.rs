@@ -96,7 +96,7 @@ impl Crypto {
     }
 
     /// Require passphrase or return error JSON with caller-provided error code
-    fn require_passphrase(passphrase: &str, rc: Code) -> Option<CryptoResult> {
+    fn require_passphrase(passphrase: &str, rc: Code) -> Option<CryptoResult<'_>> {
         if passphrase.is_empty() {
             Some(CryptoResult::error(
                 rc,
