@@ -2,9 +2,10 @@
 
 Small collection of Rust utilities for simple encryption, decryption and a custom Base52 encoder/decoder.
 
-![Linux](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-linux.yml/badge.svg)
-![macOS](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-macos.yml/badge.svg)
-![Windows](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-windows.yml/badge.svg)
+[![Linux](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-linux.yml/badge.svg)](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-linux.yml)
+[![macOS](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-macos.yml/badge.svg)](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-macos.yml)
+[![Windows](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-windows.yml/badge.svg)](https://github.com/LorenzoLeonardo/enzo-crypto/actions/workflows/rust-windows.yml)
+[![License](https://img.shields.io/github/license/LorenzoLeonardo/enzo-crypto.svg)](https://github.com/LorenzoLeonardo/enzo-crypto/blob/master/LICENSE)
 
 Overview
 - Library provides AES-based encrypt/decrypt helpers and a small scrypt-based wrapper for password-derived encryption.
