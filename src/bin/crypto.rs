@@ -21,6 +21,7 @@ enum Code {
     EncodeError = -4,
     UnknownMethodError = -5,
     InvalidArgumentsError = -6,
+    ParseError = -7,
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -53,9 +54,8 @@ impl<'a> CryptoResult<'a> {
 // Convert CryptoResult into serde_json::Value reliably
 impl<'a> From<CryptoResult<'a>> for Value {
     fn from(cr: CryptoResult<'a>) -> Self {
-        serde_json::to_value(cr).unwrap_or_else(
-            |e| json!({ "error": format!("Failed to serialize CryptoResult: {}", e) }),
-        )
+        serde_json::to_value(cr)
+            .unwrap_or_else(|e| json!({ "code": Code::ParseError, "error": e.to_string() }))
     }
 }
 
