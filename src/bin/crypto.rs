@@ -148,8 +148,8 @@ impl SharedObject for Crypto {
         };
 
         match method {
-            "decode" => Crypto::decode_base64(param.input),
-            "encode" => Crypto::encode_base64(param.input),
+            "decode64" => Crypto::decode_base64(param.input),
+            "encode64" => Crypto::encode_base64(param.input),
             "encrypt" => {
                 log::info!("Encrypting input: {}", param.input);
                 if let Some(err) = Crypto::require_passphrase(&param.passphrase, Code::EncryptError)
