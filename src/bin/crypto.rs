@@ -25,7 +25,7 @@ enum Code {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct CryptoResult<'a> {
-    rc: Code,
+    code: Code,
     #[serde(skip_serializing_if = "Option::is_none")]
     result: Option<Cow<'a, str>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -35,15 +35,15 @@ struct CryptoResult<'a> {
 impl<'a> CryptoResult<'a> {
     fn success(result: String) -> Self {
         CryptoResult {
-            rc: Code::Success,
+            code: Code::Success,
             result: Some(Cow::Owned(result.to_owned())),
             error: None,
         }
     }
 
-    fn error(rc: Code, error: String) -> Self {
+    fn error(code: Code, error: String) -> Self {
         CryptoResult {
-            rc,
+            code,
             result: None,
             error: Some(Cow::Owned(error.to_owned())),
         }
