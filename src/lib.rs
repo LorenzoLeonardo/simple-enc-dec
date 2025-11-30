@@ -16,7 +16,7 @@ fn derive_key(password: Cow<'_, str>) -> Vec<u8> {
         .to_vec()
 }
 
-pub fn encrypt(plaintext: Cow<'_, str>, password: Cow<'_, str>) -> Result<String> {
+pub fn encrypt<'a>(plaintext: Cow<'a, str>, password: Cow<'a, str>) -> Result<Cow<'a, str>> {
     let key = derive_key(password);
     let iv = [0u8; 16]; // 16 zero bytes IV
 
@@ -31,10 +31,10 @@ pub fn encrypt(plaintext: Cow<'_, str>, password: Cow<'_, str>) -> Result<String
     count += crypter.finalize(&mut ciphertext[count..])?;
     ciphertext.truncate(count);
 
-    Ok(general_purpose::STANDARD.encode(&ciphertext))
+    Ok(general_purpose::STANDARD.encode(&ciphertext).into())
 }
 
-pub fn decrypt(ciphertext_b64: Cow<'_, str>, password: Cow<'_, str>) -> Result<String> {
+pub fn decrypt<'a>(ciphertext_b64: Cow<'a, str>, password: Cow<'a, str>) -> Result<Cow<'a, str>> {
     let key = derive_key(password);
     let iv = [0u8; 16];
 
@@ -51,5 +51,5 @@ pub fn decrypt(ciphertext_b64: Cow<'_, str>, password: Cow<'_, str>) -> Result<S
     count += crypter.finalize(&mut plaintext[count..])?;
     plaintext.truncate(count);
 
-    Ok(String::from_utf8(plaintext)?)
+    Ok(Cow::Owned(String::from_utf8(plaintext)?))
 }

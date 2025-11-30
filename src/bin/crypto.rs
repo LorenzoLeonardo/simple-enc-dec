@@ -34,19 +34,19 @@ struct CryptoResult<'a> {
 }
 
 impl<'a> CryptoResult<'a> {
-    fn success(result: String) -> Self {
+    fn success(result: Cow<'a, str>) -> Self {
         CryptoResult {
             code: Code::Success,
-            result: Some(Cow::Owned(result.to_owned())),
+            result: Some(result),
             error: None,
         }
     }
 
-    fn error(code: Code, error: String) -> Self {
+    fn error(code: Code, error: Cow<'a, str>) -> Self {
         CryptoResult {
             code,
             result: None,
-            error: Some(Cow::Owned(error.to_owned())),
+            error: Some(error),
         }
     }
 }
@@ -71,10 +71,10 @@ struct Crypto;
 
 impl Crypto {
     /// Wrap Ok(String) or Err(E) into a JSON result with the provided error code.
-    fn wrap_result<E: ToString>(res: Result<String, E>, rc: Code) -> Value {
+    fn wrap_result<E: ToString>(res: Result<Cow<'_, str>, E>, rc: Code) -> Value {
         match res {
             Ok(s) => CryptoResult::success(s).into(),
-            Err(e) => CryptoResult::error(rc, e.to_string()).into(),
+            Err(e) => CryptoResult::error(rc, Cow::Borrowed(&e.to_string())).into(),
         }
     }
 
@@ -83,8 +83,12 @@ impl Crypto {
         log::info!("Decoding base64 input: {input}");
         let res = general_purpose::STANDARD
             .decode(input.as_bytes())
-            .map_err(|e| e.to_string())
-            .and_then(|bytes| String::from_utf8(bytes).map_err(|e| e.to_string()));
+            .map_err(|e| Cow::Owned::<String>(e.to_string()))
+            .and_then(|bytes| {
+                String::from_utf8(bytes)
+                    .map(Cow::Owned)
+                    .map_err(|e| Cow::Owned(e.to_string()))
+            });
 
         Self::wrap_result(res, Code::DecodeError)
     }
@@ -92,7 +96,7 @@ impl Crypto {
     /// Base64 encode helper
     fn encode_base64(input: Cow<'_, str>) -> Value {
         log::info!("Encoding base64 input: {input}");
-        CryptoResult::success(general_purpose::STANDARD.encode(input.as_bytes())).into()
+        CryptoResult::success(general_purpose::STANDARD.encode(input.as_bytes()).into()).into()
     }
 
     /// Require passphrase or return error JSON with caller-provided error code
@@ -100,7 +104,7 @@ impl Crypto {
         if passphrase.is_empty() {
             Some(CryptoResult::error(
                 rc,
-                "Passphrase is required".to_string(),
+                Cow::Borrowed("Passphrase is required"),
             ))
         } else {
             None
@@ -114,8 +118,12 @@ impl Crypto {
 
         let res = codec
             .decode(input)
-            .map_err(|e| e.to_string())
-            .and_then(|bytes| String::from_utf8(bytes).map_err(|e| e.to_string()));
+            .map_err(|e| Cow::Owned::<String>(e.to_string()))
+            .and_then(|bytes| {
+                String::from_utf8(bytes)
+                    .map(Cow::Owned)
+                    .map_err(|e| Cow::Owned(e.to_string()))
+            });
 
         Self::wrap_result(res, Code::DecodeError)
     }
@@ -124,7 +132,7 @@ impl Crypto {
     fn encode_base52(input: Cow<'_, str>) -> Value {
         log::info!("Encoding base52 input: {input}");
         let codec = Base52Codec;
-        CryptoResult::success(codec.encode(input.as_bytes())).into()
+        CryptoResult::success(codec.encode(input.as_bytes()).into()).into()
     }
 }
 
@@ -134,7 +142,8 @@ impl SharedObject for Crypto {
         let param: Param = match serde_json::from_value(args.clone()) {
             Ok(p) => p,
             Err(e) => {
-                return CryptoResult::error(Code::InvalidArgumentsError, e.to_string()).into();
+                return CryptoResult::error(Code::InvalidArgumentsError, Cow::Owned(e.to_string()))
+                    .into();
             }
         };
 
@@ -166,7 +175,7 @@ impl SharedObject for Crypto {
                     return err.into();
                 }
                 Crypto::wrap_result(
-                    scrypt::encrypt_base64(param.input.as_bytes(), &param.passphrase),
+                    scrypt::encrypt_base64(param.input.as_bytes(), param.passphrase),
                     Code::EncryptError,
                 )
             }
@@ -177,16 +186,20 @@ impl SharedObject for Crypto {
                     return err.into();
                 }
                 Crypto::wrap_result(
-                    scrypt::decrypt_base64(&param.input, &param.passphrase)
-                        .map_err(|e| e.to_string())
-                        .and_then(|bytes| String::from_utf8(bytes).map_err(|e| e.to_string())),
+                    scrypt::decrypt_base64(param.input, param.passphrase)
+                        .map_err(|e| Cow::Owned::<String>(e.to_string()))
+                        .and_then(|bytes| {
+                            String::from_utf8(bytes)
+                                .map(Cow::Owned)
+                                .map_err(|e| Cow::Owned(e.to_string()))
+                        }),
                     Code::DecryptError,
                 )
             }
             _ => {
                 let msg = format!("Unknown method called: {method}");
                 log::warn!("{msg}");
-                CryptoResult::error(Code::UnknownMethodError, msg).into()
+                CryptoResult::error(Code::UnknownMethodError, Cow::Borrowed(&msg)).into()
             }
         }
     }
@@ -335,7 +348,7 @@ mod tests {
     #[test]
     fn wrap_result_ok_and_err() {
         // Ok case
-        let v = Crypto::wrap_result::<&str>(Ok("fine".to_string()), Code::EncryptError);
+        let v = Crypto::wrap_result::<&str>(Ok("fine".into()), Code::EncryptError);
         assert_eq!(v["code"].as_i64().unwrap(), 0);
         assert_eq!(v["result"].as_str().unwrap(), "fine");
 
