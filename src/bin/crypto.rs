@@ -82,18 +82,14 @@ impl<'a> From<CryptoOK<'a>> for serde_json::Value {
     }
 }
 
-fn into_value(result: Result<CryptoOK, CryptoError>) -> Value {
-    match result {
-        Ok(r) => r.into(),
-        Err(e) => e.into(),
-    }
-}
-
-struct CryptoResult<'a>(Result<CryptoOK<'a>, CryptoError<'a>>);
+pub struct CryptoResult<'a>(Result<CryptoOK<'a>, CryptoError<'a>>);
 
 impl<'a> From<CryptoResult<'a>> for Value {
-    fn from(res: CryptoResult<'a>) -> Self {
-        into_value(res.0)
+    fn from(result: CryptoResult<'a>) -> Self {
+        match result.0 {
+            Ok(r) => r.into(),
+            Err(e) => e.into(),
+        }
     }
 }
 
