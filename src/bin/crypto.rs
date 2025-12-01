@@ -101,7 +101,7 @@ struct Param<'a> {
     passphrase: Cow<'a, str>,
 }
 
-struct Crypto;
+pub struct Crypto;
 
 impl Crypto {
     /// Wrap Ok(String) or Err(E) into a JSON result with the provided error code.
@@ -109,6 +109,18 @@ impl Crypto {
         match res {
             Ok(s) => CryptoResult(Ok(CryptoOK::success(s))),
             Err(e) => CryptoResult(Err(CryptoError::error(rc, Cow::Owned(e.to_string())))),
+        }
+    }
+
+    /// Require passphrase or return error JSON with caller-provided error code
+    fn require_passphrase(passphrase: Cow<'_, str>, rc: Code) -> Option<CryptoError> {
+        if passphrase.is_empty() {
+            Some(CryptoError::error(
+                rc,
+                Cow::Borrowed("Passphrase is required"),
+            ))
+        } else {
+            None
         }
     }
 
@@ -158,18 +170,6 @@ impl Crypto {
                 .encode(input.as_bytes())
                 .into(),
         )))
-    }
-
-    /// Require passphrase or return error JSON with caller-provided error code
-    pub fn require_passphrase(passphrase: Cow<'_, str>, rc: Code) -> Option<CryptoError> {
-        if passphrase.is_empty() {
-            Some(CryptoError::error(
-                rc,
-                Cow::Borrowed("Passphrase is required"),
-            ))
-        } else {
-            None
-        }
     }
 
     /// Base52 decode helper
