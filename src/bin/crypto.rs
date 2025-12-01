@@ -169,6 +169,50 @@ impl Crypto {
         let codec = Base52Codec;
         CryptoResult::success(codec.encode(input.as_bytes()).into()).into()
     }
+
+    fn encrypt(input: Cow<'_, str>, passphrase: Cow<'_, str>) -> Value {
+        log::info!("Encrypting input with passphrase.");
+        if let Some(err) = Crypto::require_passphrase(&passphrase, Code::EncryptError) {
+            return err.into();
+        }
+        Self::wrap_result(encrypt(input, passphrase), Code::EncryptError)
+    }
+
+    fn decrypt(input: Cow<'_, str>, passphrase: Cow<'_, str>) -> Value {
+        log::info!("Decrypting input with passphrase.");
+        if let Some(err) = Crypto::require_passphrase(&passphrase, Code::DecryptError) {
+            return err.into();
+        }
+        Self::wrap_result(decrypt(input, passphrase), Code::DecryptError)
+    }
+
+    fn scrypt_encrypt(input: Cow<'_, str>, passphrase: Cow<'_, str>) -> Value {
+        log::info!("Encrypting input with scrypt and passphrase.");
+        if let Some(err) = Crypto::require_passphrase(&passphrase, Code::EncryptError) {
+            return err.into();
+        }
+        Crypto::wrap_result(
+            scrypt::encrypt_base64(input.as_bytes(), passphrase),
+            Code::EncryptError,
+        )
+    }
+
+    fn scrypt_decrypt(input: Cow<'_, str>, passphrase: Cow<'_, str>) -> Value {
+        log::info!("Decrypting input with scrypt and passphrase.");
+        if let Some(err) = Crypto::require_passphrase(&passphrase, Code::DecryptError) {
+            return err.into();
+        }
+        Crypto::wrap_result(
+            scrypt::decrypt_base64(input, passphrase)
+                .map_err(|e| Cow::Owned::<String>(e.to_string()))
+                .and_then(|bytes| {
+                    String::from_utf8(bytes)
+                        .map(Cow::Owned)
+                        .map_err(|e| Cow::Owned(e.to_string()))
+                }),
+            Code::DecryptError,
+        )
+    }
 }
 
 #[async_trait]
@@ -187,52 +231,12 @@ impl SharedObject for Crypto {
             "encode64" => Crypto::encode_base64(param.input),
             "decode64-nopad" => Crypto::decode_base64_nopad(param.input),
             "encode64-nopad" => Crypto::encode_base64_nopad(param.input),
-            "encrypt" => {
-                log::info!("Encrypting input: {}", param.input);
-                if let Some(err) = Crypto::require_passphrase(&param.passphrase, Code::EncryptError)
-                {
-                    return err.into();
-                }
-                Crypto::wrap_result(encrypt(param.input, param.passphrase), Code::EncryptError)
-            }
-            "decrypt" => {
-                log::info!("Decrypting input: {}", param.input);
-                if let Some(err) = Crypto::require_passphrase(&param.passphrase, Code::DecryptError)
-                {
-                    return err.into();
-                }
-                Crypto::wrap_result(decrypt(param.input, param.passphrase), Code::DecryptError)
-            }
+            "encrypt" => Crypto::encrypt(param.input, param.passphrase),
+            "decrypt" => Crypto::decrypt(param.input, param.passphrase),
             "decode52" => Crypto::decode_base52(param.input),
             "encode52" => Crypto::encode_base52(param.input),
-            "scrypt-encrypt" => {
-                log::info!("Encrypting input: {}", param.input);
-                if let Some(err) = Crypto::require_passphrase(&param.passphrase, Code::EncryptError)
-                {
-                    return err.into();
-                }
-                Crypto::wrap_result(
-                    scrypt::encrypt_base64(param.input.as_bytes(), param.passphrase),
-                    Code::EncryptError,
-                )
-            }
-            "scrypt-decrypt" => {
-                log::info!("Decrypting input: {}", param.input);
-                if let Some(err) = Crypto::require_passphrase(&param.passphrase, Code::DecryptError)
-                {
-                    return err.into();
-                }
-                Crypto::wrap_result(
-                    scrypt::decrypt_base64(param.input, param.passphrase)
-                        .map_err(|e| Cow::Owned::<String>(e.to_string()))
-                        .and_then(|bytes| {
-                            String::from_utf8(bytes)
-                                .map(Cow::Owned)
-                                .map_err(|e| Cow::Owned(e.to_string()))
-                        }),
-                    Code::DecryptError,
-                )
-            }
+            "scrypt-encrypt" => Crypto::scrypt_encrypt(param.input, param.passphrase),
+            "scrypt-decrypt" => Crypto::scrypt_decrypt(param.input, param.passphrase),
             _ => {
                 let msg = format!("Unknown method called: {method}");
                 log::warn!("{msg}");
