@@ -26,18 +26,14 @@ pub enum Code {
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct CryptoOK<'a> {
     code: Code,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    result: Option<Cow<'a, str>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    error: Option<Cow<'a, str>>,
+    result: Cow<'a, str>,
 }
 
 impl<'a> CryptoOK<'a> {
     fn success(result: Cow<'a, str>) -> Self {
         CryptoOK {
             code: Code::Success,
-            result: Some(result),
-            error: None,
+            result,
         }
     }
 }
