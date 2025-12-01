@@ -1,4 +1,5 @@
 pub mod base52;
+pub mod crypto;
 pub mod scrypt;
 pub mod util;
 
