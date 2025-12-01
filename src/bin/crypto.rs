@@ -42,14 +42,6 @@ impl<'a> CryptoOK<'a> {
         }
     }
 
-    fn error(code: Code, error: Cow<'a, str>) -> Self {
-        CryptoOK {
-            code,
-            result: None,
-            error: Some(error),
-        }
-    }
-
     fn contruct_error_json() -> Value {
         json!({
             "code": Code::ParseError,
@@ -266,7 +258,7 @@ impl SharedObject for Crypto {
             _ => {
                 let msg = format!("Unknown method called: {method}");
                 log::warn!("{msg}");
-                CryptoOK::error(Code::UnknownMethodError, Cow::Borrowed(&msg)).into()
+                CryptoError::error(Code::UnknownMethodError, Cow::Borrowed(&msg)).into()
             }
         }
     }
