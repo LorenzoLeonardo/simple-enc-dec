@@ -10,7 +10,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use crate::{
     base52::Base52Codec,
     decrypt, encrypt,
-    result::{Fallback, GenericResult},
+    result::{DefaultFallback, GenericResult},
     scrypt,
 };
 
@@ -52,18 +52,6 @@ pub struct CryptoError<'a> {
 impl<'a> CryptoError<'a> {
     fn error(code: Code, error: Cow<'a, str>) -> Self {
         CryptoError { code, error }
-    }
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-pub struct DefaultFallback;
-impl Fallback for DefaultFallback {
-    fn fallback(err: serde_json::Error) -> serde_json::Value {
-        serde_json::json!({
-            "code": Code::ParseError,
-            "result": err.
-            to_string(),
-        })
     }
 }
 
