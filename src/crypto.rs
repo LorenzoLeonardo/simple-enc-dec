@@ -7,12 +7,7 @@ use ipc_broker::worker::SharedObject;
 use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::{
-    base52::Base52Codec,
-    decrypt, encrypt,
-    result::{DefaultFallback, GenericResult},
-    scrypt,
-};
+use crate::{base52::Base52Codec, decrypt, encrypt, result::GenericResult, scrypt};
 
 #[repr(i32)]
 #[derive(Serialize_repr, Deserialize_repr, Debug, Default)]
@@ -35,7 +30,7 @@ pub struct CryptoOK<'a> {
 }
 
 impl<'a> CryptoOK<'a> {
-    fn success(result: Cow<'a, str>) -> Self {
+    fn new(result: Cow<'a, str>) -> CryptoOK<'a> {
         CryptoOK {
             code: Code::Success,
             result,
@@ -50,12 +45,12 @@ pub struct CryptoError<'a> {
 }
 
 impl<'a> CryptoError<'a> {
-    fn error(code: Code, error: Cow<'a, str>) -> Self {
+    fn new(code: Code, error: Cow<'a, str>) -> CryptoError<'a> {
         CryptoError { code, error }
     }
 }
 
-type CryptoResult<'a> = GenericResult<CryptoOK<'a>, CryptoError<'a>, DefaultFallback>;
+type CryptoResult<'a> = GenericResult<CryptoOK<'a>, CryptoError<'a>>;
 
 #[derive(serde::Deserialize)]
 struct Param<'a> {
@@ -68,18 +63,10 @@ struct Param<'a> {
 pub struct Crypto;
 
 impl Crypto {
-    /// Wrap Ok(String) or Err(E) into a JSON result with the provided error code.
-    fn wrap_result<'a, E: ToString>(res: Result<Cow<'a, str>, E>, rc: Code) -> CryptoResult<'a> {
-        match res {
-            Ok(s) => CryptoResult::ok(CryptoOK::success(s)),
-            Err(e) => CryptoResult::err(CryptoError::error(rc, Cow::Owned(e.to_string()))),
-        }
-    }
-
     /// Require passphrase or return error JSON with caller-provided error code
     fn require_passphrase<'a>(passphrase: Cow<'a, str>, rc: Code) -> Option<CryptoResult<'a>> {
         if passphrase.is_empty() {
-            Some(CryptoResult::err(CryptoError::error(
+            Some(CryptoResult::Err(CryptoError::new(
                 rc,
                 Cow::Borrowed("Passphrase is required"),
             )))
@@ -91,22 +78,27 @@ impl Crypto {
     /// Base64 decode helper
     pub fn decode_base64<'a>(input: Cow<'a, str>) -> CryptoResult<'a> {
         log::info!("Decoding base64 input: {input}");
-        let res = general_purpose::STANDARD
+        general_purpose::STANDARD
             .decode(input.as_bytes())
             .map_err(|e| Cow::Owned::<String>(e.to_string()))
             .and_then(|bytes| {
                 String::from_utf8(bytes)
                     .map(Cow::Owned)
                     .map_err(|e| Cow::Owned(e.to_string()))
-            });
-
-        Self::wrap_result(res, Code::DecodeError)
+            })
+            .map(|s| CryptoResult::Ok(CryptoOK::new(s)))
+            .unwrap_or_else(|e| {
+                CryptoResult::Err(CryptoError::new(
+                    Code::DecodeError,
+                    Cow::Owned(e.to_string()),
+                ))
+            })
     }
 
     /// Base64 encode helper
     pub fn encode_base64<'a>(input: Cow<'a, str>) -> CryptoResult<'a> {
         log::info!("Encoding base64 input: {input}");
-        CryptoResult::ok(CryptoOK::success(
+        CryptoResult::Ok(CryptoOK::new(
             general_purpose::STANDARD.encode(input.as_bytes()).into(),
         ))
     }
@@ -114,22 +106,27 @@ impl Crypto {
     /// Base64 decode helper
     pub fn decode_base64_nopad<'a>(input: Cow<'a, str>) -> CryptoResult<'a> {
         log::info!("Decoding base64 no padding input: {input}");
-        let res = general_purpose::STANDARD_NO_PAD
+        general_purpose::STANDARD_NO_PAD
             .decode(input.as_bytes())
             .map_err(|e| Cow::Owned::<String>(e.to_string()))
             .and_then(|bytes| {
                 String::from_utf8(bytes)
                     .map(Cow::Owned)
                     .map_err(|e| Cow::Owned(e.to_string()))
-            });
-
-        Self::wrap_result(res, Code::DecodeError)
+            })
+            .map(|s| CryptoResult::Ok(CryptoOK::new(s)))
+            .unwrap_or_else(|e| {
+                CryptoResult::Err(CryptoError::new(
+                    Code::DecodeError,
+                    Cow::Owned(e.to_string()),
+                ))
+            })
     }
 
     /// Base64 encode helper
     pub fn encode_base64_nopad<'a>(input: Cow<'a, str>) -> CryptoResult<'a> {
         log::info!("Encoding base64 no padding input: {input}");
-        GenericResult::ok(CryptoOK::success(
+        CryptoResult::Ok(CryptoOK::new(
             general_purpose::STANDARD_NO_PAD
                 .encode(input.as_bytes())
                 .into(),
@@ -141,23 +138,28 @@ impl Crypto {
         log::info!("Decoding base52 input: {input}");
         let codec = Base52Codec;
 
-        let res = codec
+        codec
             .decode(input.as_bytes())
             .map_err(|e| Cow::Owned::<String>(e.to_string()))
             .and_then(|bytes| {
                 String::from_utf8(bytes)
                     .map(Cow::Owned)
                     .map_err(|e| Cow::Owned(e.to_string()))
-            });
-
-        Self::wrap_result(res, Code::DecodeError)
+            })
+            .map(|s| CryptoResult::Ok(CryptoOK::new(s)))
+            .unwrap_or_else(|e| {
+                CryptoResult::Err(CryptoError::new(
+                    Code::DecodeError,
+                    Cow::Owned(e.to_string()),
+                ))
+            })
     }
 
     /// Base52 encode helper
     pub fn encode_base52<'a>(input: Cow<'a, str>) -> CryptoResult<'a> {
         log::info!("Encoding base52 input: {input}");
         let codec = Base52Codec;
-        GenericResult::ok(CryptoOK::success(codec.encode(input.as_bytes()).into()))
+        GenericResult::Ok(CryptoOK::new(codec.encode(input.as_bytes()).into()))
     }
 
     pub fn encrypt<'a>(input: Cow<'a, str>, passphrase: Cow<'a, str>) -> CryptoResult<'a> {
@@ -165,7 +167,14 @@ impl Crypto {
         if let Some(err) = Crypto::require_passphrase(passphrase.clone(), Code::EncryptError) {
             return err;
         }
-        Self::wrap_result(encrypt(input, passphrase.clone()), Code::EncryptError)
+        encrypt(input, passphrase.clone())
+            .map(|res| CryptoResult::Ok(CryptoOK::new(res)))
+            .unwrap_or_else(|e| {
+                CryptoResult::Err(CryptoError::new(
+                    Code::EncryptError,
+                    Cow::Owned(e.to_string()),
+                ))
+            })
     }
 
     pub fn decrypt<'a>(input: Cow<'a, str>, passphrase: Cow<'a, str>) -> CryptoResult<'a> {
@@ -173,7 +182,14 @@ impl Crypto {
         if let Some(err) = Crypto::require_passphrase(passphrase.clone(), Code::DecryptError) {
             return err;
         }
-        Self::wrap_result(decrypt(input, passphrase), Code::DecryptError)
+        decrypt(input, passphrase)
+            .map(|res| CryptoResult::Ok(CryptoOK::new(res)))
+            .unwrap_or_else(|e| {
+                CryptoResult::Err(CryptoError::new(
+                    Code::DecryptError,
+                    Cow::Owned(e.to_string()),
+                ))
+            })
     }
 
     pub fn scrypt_encrypt<'a>(input: Cow<'a, str>, passphrase: Cow<'a, str>) -> CryptoResult<'a> {
@@ -181,10 +197,16 @@ impl Crypto {
         if let Some(err) = Crypto::require_passphrase(passphrase.clone(), Code::EncryptError) {
             return err;
         }
-        Crypto::wrap_result(
-            scrypt::encrypt_base64(input.as_bytes(), passphrase),
-            Code::EncryptError,
-        )
+
+        scrypt::encrypt_base64(input.as_bytes(), passphrase)
+            .map(|s| CryptoResult::Ok(CryptoOK::new(s)))
+            .map_err(|e| Cow::Owned::<String>(e.to_string()))
+            .unwrap_or_else(|e| {
+                CryptoResult::Err(CryptoError::new(
+                    Code::DecodeError,
+                    Cow::Owned(e.to_string()),
+                ))
+            })
     }
 
     pub fn scrypt_decrypt<'a>(input: Cow<'a, str>, passphrase: Cow<'a, str>) -> CryptoResult<'a> {
@@ -192,16 +214,21 @@ impl Crypto {
         if let Some(err) = Crypto::require_passphrase(passphrase.clone(), Code::DecryptError) {
             return err;
         }
-        Crypto::wrap_result(
-            scrypt::decrypt_base64(input, passphrase)
-                .map_err(|e| Cow::Owned::<String>(e.to_string()))
-                .and_then(|bytes| {
-                    String::from_utf8(bytes)
-                        .map(Cow::Owned)
-                        .map_err(|e| Cow::Owned(e.to_string()))
-                }),
-            Code::DecryptError,
-        )
+
+        scrypt::decrypt_base64(input, passphrase)
+            .map_err(|e| Cow::Owned::<String>(e.to_string()))
+            .and_then(|bytes| {
+                String::from_utf8(bytes)
+                    .map(Cow::Owned)
+                    .map_err(|e| Cow::Owned(e.to_string()))
+            })
+            .map(|s| CryptoResult::Ok(CryptoOK::new(s)))
+            .unwrap_or_else(|e| {
+                CryptoResult::Err(CryptoError::new(
+                    Code::DecodeError,
+                    Cow::Owned(e.to_string()),
+                ))
+            })
     }
 }
 
@@ -211,7 +238,7 @@ impl SharedObject for Crypto {
         let param: Param = match serde_json::from_value(args.clone()) {
             Ok(p) => p,
             Err(e) => {
-                return CryptoResult::err(CryptoError::error(
+                return CryptoResult::Err(CryptoError::new(
                     Code::InvalidArgumentsError,
                     Cow::Owned(e.to_string()),
                 ))
@@ -233,7 +260,7 @@ impl SharedObject for Crypto {
             _ => {
                 let msg = format!("Unknown method called: {method}");
                 log::warn!("{msg}");
-                CryptoResult::err(CryptoError::error(
+                CryptoResult::Err(CryptoError::new(
                     Code::UnknownMethodError,
                     Cow::Borrowed(&msg),
                 ))
