@@ -1,3 +1,5 @@
+use base64::DecodeError;
+
 const BASE52_ALPHABET: &[u8; 52] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 pub struct Base52Codec;
@@ -58,7 +60,7 @@ impl Base52Codec {
         String::from_utf8(result).unwrap()
     }
 
-    pub fn decode<T>(&self, input: T) -> Result<Vec<u8>, String>
+    pub fn decode<T>(&self, input: T) -> Result<Vec<u8>, DecodeError>
     where
         T: AsRef<[u8]>,
         Self: Send + Sync,
@@ -73,7 +75,7 @@ impl Base52Codec {
         for &c in bytes.iter().skip(leading_zeros) {
             let value = match BASE52_ALPHABET.iter().position(|&x| x == c) {
                 Some(i) => i as u32,
-                None => return Err(format!("Invalid character: {}", c as char)),
+                None => return Err(DecodeError::InvalidByte(1, c)),
             };
 
             let mut carry = value;

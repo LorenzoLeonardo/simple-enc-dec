@@ -16,6 +16,7 @@ log = "0.4"
 chrono = "0.4"
 fern = "0.7"
 serde_repr = "0.1"
+json-result = "0.1"
 
 [dev-dependencies]
 rand = "0.9"
