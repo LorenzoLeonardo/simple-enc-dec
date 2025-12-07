@@ -236,6 +236,18 @@ impl Crypto {
             })
             .into()
     }
+
+    pub fn rot_n_encode<'a>(input: Cow<'a, str>, shift: u8) -> CryptoResult<'a> {
+        log::info!("Encoding ROT-N input with shift {shift}: {input}");
+        let encoded = crate::rotn::rot_n_encode(&input, shift);
+        CryptoOK::new(Cow::Owned(encoded)).into()
+    }
+
+    pub fn rot_n_decode<'a>(input: Cow<'a, str>, shift: u8) -> CryptoResult<'a> {
+        log::info!("Decoding ROT-N input with shift {shift}: {input}");
+        let decoded = crate::rotn::rot_n_decode(&input, shift);
+        CryptoOK::new(Cow::Owned(decoded)).into()
+    }
 }
 
 #[async_trait]
@@ -263,6 +275,8 @@ impl SharedObject for Crypto {
             "encode52" => Crypto::encode_base52(param.input).into(),
             "scrypt-encrypt" => Crypto::scrypt_encrypt(param.input, param.passphrase).into(),
             "scrypt-decrypt" => Crypto::scrypt_decrypt(param.input, param.passphrase).into(),
+            "rot8-encode" => Crypto::rot_n_encode(param.input, 8).into(),
+            "rot8-decode" => Crypto::rot_n_decode(param.input, 8).into(),
             _ => {
                 let msg = format!("Unknown method called: {method}");
                 log::warn!("{msg}");
