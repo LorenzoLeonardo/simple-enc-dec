@@ -8,7 +8,7 @@ use json_result::r#struct::JsonResult;
 use serde_json::Value;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use crate::{base52::Base52Codec, decrypt, encrypt, scrypt};
+use crate::{base52, decrypt, encrypt, scrypt};
 
 #[repr(i32)]
 #[derive(Serialize_repr, Deserialize_repr, Debug, Default)]
@@ -150,10 +150,8 @@ impl Crypto {
     /// Base52 decode helper
     pub fn decode_base52<'a>(input: Cow<'a, str>) -> CryptoResult<'a> {
         log::info!("Decoding base52 input: {input}");
-        let codec = Base52Codec;
 
-        codec
-            .decode(input.as_bytes())
+        base52::decode(input.as_bytes())
             .map_err(CryptoError::from)
             .and_then(|bytes| {
                 Ok(CryptoOK::new(
@@ -168,8 +166,7 @@ impl Crypto {
     /// Base52 encode helper
     pub fn encode_base52<'a>(input: Cow<'a, str>) -> CryptoResult<'a> {
         log::info!("Encoding base52 input: {input}");
-        let codec = Base52Codec;
-        CryptoOK::new(codec.encode(input.as_bytes()).into()).into()
+        CryptoOK::new(base52::encode(input.as_bytes()).into()).into()
     }
 
     pub fn encrypt<'a>(input: Cow<'a, str>, passphrase: Cow<'a, str>) -> CryptoResult<'a> {

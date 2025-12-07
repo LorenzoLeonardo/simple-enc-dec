@@ -1,4 +1,4 @@
-use enzo_crypto::{base52::Base52Codec, util};
+use enzo_crypto::{base52, util};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -8,11 +8,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("Usage: {} <plaintext>", args[0]);
         std::process::exit(1);
     }
-    let codec = Base52Codec;
 
     println!(
         "[Encoded Text] {}",
-        codec.encode(util::data_source(&args[1])?)
+        base52::encode(util::data_source(&args[1])?)
     );
 
     Ok(())
