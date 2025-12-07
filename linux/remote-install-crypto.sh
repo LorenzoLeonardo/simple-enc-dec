@@ -18,7 +18,7 @@ echo "Uninstall previous packages..."
 ssh -i $SSH_KEY_PATH $REMOTE_PC \
     "sudo systemctl stop $SERVICE_NAME; \
      sudo systemctl disable $SERVICE_NAME; \
-     sudo rm -f $REMOTE_DEST_DIR/$EXECUTABLE_NAME; \
+     sudo rm -f $REMOTE_DEST_DIR/*; \
      sudo rm -f /etc/systemd/system/$SERVICE_NAME; \
      mkdir -p $REMOTE_DEST_DIR"
 
@@ -27,7 +27,7 @@ scp -i $SSH_KEY_PATH $PWD/target/release/$EXECUTABLE_NAME $REMOTE_PC:$REMOTE_DES
 scp -i $SSH_KEY_PATH $PWD/target/release/encrypt $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/decrypt $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/encode64 $REMOTE_PC:$REMOTE_DEST_DIR
-scp -i $SSH_KEY_PATH $PWD/target/release/decode64 $REMOTE_PC:$
+scp -i $SSH_KEY_PATH $PWD/target/release/decode64 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/encode64-nopad $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/decode64-nopad $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/encode52 $REMOTE_PC:$REMOTE_DEST_DIR
