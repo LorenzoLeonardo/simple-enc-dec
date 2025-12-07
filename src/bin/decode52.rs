@@ -1,4 +1,4 @@
-use enzo_crypto::{base52::Base52Codec, util};
+use enzo_crypto::{base52, util};
 use std::error::Error; // assuming your crate name is enzo_crypto
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -8,9 +8,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("Usage: {} <base52 string>", args[0]);
         std::process::exit(1);
     }
-    let codec = Base52Codec;
 
-    let decoded = codec.decode(util::data_source(&args[1])?)?; // Validate input
+    let decoded = base52::decode(util::data_source(&args[1])?)?; // Validate input
     println!("[Decoded Text] {}", String::from_utf8(decoded)?);
 
     Ok(())
