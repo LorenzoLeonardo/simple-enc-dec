@@ -1,3 +1,4 @@
+pub mod async_file_gcm;
 pub mod base52;
 pub mod crypto;
 pub mod file_gcm;
