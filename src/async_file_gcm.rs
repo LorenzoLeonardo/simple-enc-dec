@@ -7,6 +7,7 @@ use openssl::symm::{Cipher, Crypter, Mode};
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, AsyncWriteExt, BufReader, BufWriter};
 use tokio::sync::mpsc::Sender;
+use tokio::time::{Duration, Instant};
 
 const SALT_LEN: usize = 16;
 const NONCE_LEN: usize = 12; // Recommended nonce size for GCM
@@ -59,6 +60,7 @@ pub async fn encrypt_file(
     output_path: &Path,
     password: &str,
     progress_tx: Sender<Progress>,
+    interval: Duration,
 ) -> Result<()> {
     let mut salt = [0u8; SALT_LEN];
     let mut nonce = [0u8; NONCE_LEN];
@@ -85,6 +87,8 @@ pub async fn encrypt_file(
     let metadata = tokio::fs::metadata(input_path).await?;
     let total_bytes = metadata.len() as usize;
     let mut total_bytes_read = 0u64 as usize;
+    // --- PROGRESS THROTTLE ---
+    let mut last_sent = Instant::now();
     loop {
         let count = infile.read(&mut buffer).await?;
         if count == 0 {
@@ -94,10 +98,17 @@ pub async fn encrypt_file(
         let len = crypter.update(&buffer[..count], &mut ciphertext_chunk)?;
         outfile.write_all(&ciphertext_chunk[..len]).await?;
 
-        progress_tx
-            .send(Progress(total_bytes_read, total_bytes))
-            .await?;
+        // Send progress only every 500ms
+        if last_sent.elapsed() >= interval {
+            progress_tx
+                .send(Progress(total_bytes_read, total_bytes))
+                .await?;
+            last_sent = Instant::now();
+        }
     }
+    progress_tx
+    .send(Progress(total_bytes_read, total_bytes))
+    .await?;
 
     // Finalize encryption (writes any remaining data)
     let len = crypter.finalize(&mut ciphertext_chunk)?;
@@ -220,6 +231,7 @@ mod tests {
                 &enc_output_clone,
                 "testpassword",
                 enc_progress_tx,
+                Duration::from_millis(500),
             )
             .await
         });
@@ -301,6 +313,7 @@ mod tests {
                 &encrypted_path_clone,
                 "correct_password",
                 enc_progress_tx,
+                Duration::from_millis(500),
             )
             .await
         });
@@ -356,7 +369,16 @@ mod tests {
         let enc_task = task::spawn({
             let plain = plain_path.clone();
             let enc = encrypted_path.clone();
-            async move { encrypt_file(&plain, &enc, "testpassword", enc_tx).await }
+            async move {
+                encrypt_file(
+                    &plain,
+                    &enc,
+                    "testpassword",
+                    enc_tx,
+                    Duration::from_millis(500),
+                )
+                .await
+            }
         });
 
         let mut last_enc = None;
