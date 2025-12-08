@@ -300,9 +300,9 @@ checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
 
 [[package]]
 name = "ipc-broker"
-version = "1.0.3"
+version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4a37b08d7283465a607cecd475f52a707859e581d02e6f6453b6879f172c07d"
+checksum = "68540bf8ad0d10bd5eaf312b98ac0a4c5cc11fd85ab1961d7f5b542e0c075b09"
 dependencies = [
  "async-trait",
  "chrono",
