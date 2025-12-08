@@ -98,7 +98,7 @@ pub async fn encrypt_file(
         let len = crypter.update(&buffer[..count], &mut ciphertext_chunk)?;
         outfile.write_all(&ciphertext_chunk[..len]).await?;
 
-        // Send progress only every 500ms
+        // Send progress only every specified interval
         if last_sent.elapsed() >= interval {
             progress_tx
                 .send(Progress(total_bytes_read, total_bytes))
@@ -106,10 +106,6 @@ pub async fn encrypt_file(
             last_sent = Instant::now();
         }
     }
-    progress_tx
-    .send(Progress(total_bytes_read, total_bytes))
-    .await?;
-
     // Finalize encryption (writes any remaining data)
     let len = crypter.finalize(&mut ciphertext_chunk)?;
     outfile.write_all(&ciphertext_chunk[..len]).await?;
@@ -121,6 +117,10 @@ pub async fn encrypt_file(
     outfile.write_all(&tag).await?;
 
     outfile.flush().await?;
+
+    progress_tx
+        .send(Progress(total_bytes_read, total_bytes))
+        .await?;
     Ok(())
 }
 
@@ -131,6 +131,7 @@ pub async fn decrypt_file(
     output_path: &Path,
     password: &str,
     progress_tx: Sender<Progress>,
+    interval: Duration,
 ) -> Result<()> {
     let mut infile = BufReader::new(File::open(input_path).await?);
 
@@ -164,7 +165,8 @@ pub async fn decrypt_file(
 
     // Read ciphertext chunks until just before tag
     let mut total_read = 0usize;
-
+    // --- PROGRESS THROTTLE ---
+    let mut last_sent = Instant::now();
     while total_read < ciphertext_len {
         let to_read = std::cmp::min(4096, ciphertext_len - total_read);
         let read_bytes = infile.read(&mut buffer[..to_read]).await?;
@@ -176,9 +178,12 @@ pub async fn decrypt_file(
         let len = crypter.update(&buffer[..read_bytes], &mut plaintext_chunk)?;
         outfile.write_all(&plaintext_chunk[..len]).await?;
 
-        progress_tx.send(Progress(total_read, total_bytes)).await?;
+        // Send progress only every specified interval
+        if last_sent.elapsed() >= interval {
+            progress_tx.send(Progress(total_read, total_bytes)).await?;
+            last_sent = Instant::now();
+        }
     }
-
     // Read the tag at the end of file
     let mut tag = [0u8; TAG_LEN];
     infile.read_exact(&mut tag).await?;
@@ -192,6 +197,7 @@ pub async fn decrypt_file(
 
     outfile.flush().await?;
 
+    progress_tx.send(Progress(total_read, total_bytes)).await?;
     Ok(())
 }
 
@@ -263,6 +269,7 @@ mod tests {
                 &dec_output_clone,
                 "testpassword",
                 dec_progress_tx,
+                Duration::from_millis(500),
             )
             .await
         });
@@ -329,6 +336,7 @@ mod tests {
                 &decrypted_path,
                 "wrong_password",
                 dec_progress_tx,
+                Duration::from_millis(500),
             )
             .await
         });
@@ -397,7 +405,16 @@ mod tests {
         let dec_task = task::spawn({
             let enc = encrypted_path.clone();
             let dec = decrypted_path.clone();
-            async move { decrypt_file(&enc, &dec, "testpassword", dec_tx).await }
+            async move {
+                decrypt_file(
+                    &enc,
+                    &dec,
+                    "testpassword",
+                    dec_tx,
+                    Duration::from_millis(500),
+                )
+                .await
+            }
         });
 
         let mut last_dec = None;

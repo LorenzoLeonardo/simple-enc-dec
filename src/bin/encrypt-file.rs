@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let input_path = PathBuf::from(&args[1]);
     let output_path = PathBuf::from(&args[2]);
-    let password = &args[3];
+    let password = args[3].to_string();
     let progress = if args.len() > 4 {
         if &args[4] == "--progress" {
             true
@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 async_file_gcm::encrypt_file(
                     &plain,
                     &enc,
-                    "testpassword",
+                    &password,
                     tx_progress,
                     Duration::from_millis(500),
                 )
@@ -76,7 +76,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         enc_task.await??;
         println!(); // move to new line at the end
     } else {
-        encrypt_file(input_path.as_path(), output_path.as_path(), password)?;
+        encrypt_file(input_path.as_path(), output_path.as_path(), &password)?;
     }
     println!(
         "Encryption successful. Encrypted file saved to: {}",
