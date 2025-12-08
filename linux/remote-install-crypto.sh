@@ -34,6 +34,8 @@ scp -i $SSH_KEY_PATH $PWD/target/release/encode52 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/decode52 $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/scrypt-decrypt $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/target/release/scrypt-encrypt $REMOTE_PC:$REMOTE_DEST_DIR
+scp -i $SSH_KEY_PATH $PWD/target/release/decrypt-file $REMOTE_PC:$REMOTE_DEST_DIR
+scp -i $SSH_KEY_PATH $PWD/target/release/encrypt-file $REMOTE_PC:$REMOTE_DEST_DIR
 scp -i $SSH_KEY_PATH $PWD/linux/systemd/$SERVICE_NAME $REMOTE_PC:$REMOTE_DEST_DIR
 
 # Set executable permission
@@ -42,6 +44,8 @@ ssh -i $SSH_KEY_PATH $REMOTE_PC \
     "chmod +x $REMOTE_DEST_DIR/$EXECUTABLE_NAME; \
      chmod +x $REMOTE_DEST_DIR/encrypt; \
      chmod +x $REMOTE_DEST_DIR/decrypt; \
+     chmod +x $REMOTE_DEST_DIR/encrypt-file; \
+     chmod +x $REMOTE_DEST_DIR/decrypt-file; \
      chmod +x $REMOTE_DEST_DIR/decode64; \
      chmod +x $REMOTE_DEST_DIR/encode64; \
      chmod +x $REMOTE_DEST_DIR/decode64-nopad; \
