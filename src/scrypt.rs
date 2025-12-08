@@ -175,10 +175,10 @@ mod tests {
         let enc = encrypt_base64(b"Hello world", std::borrow::Cow::Borrowed(PASSWORD)).unwrap();
         let mut raw = general_purpose::STANDARD.decode(enc.as_bytes()).unwrap();
 
-        // flip one random bit in ciphertext region (after salt + iv)
-        if raw.len() > SALT_LEN + IV_LEN {
-            raw[SALT_LEN + IV_LEN] ^= 0x01;
-        }
+        // flip a bit somewhere in the ciphertext region
+        let ct_start = SALT_LEN + IV_LEN;
+        let pos = ct_start + 1; // not the first byte, avoid rare padding-matching issues
+        raw[pos] ^= 0x01;
 
         let tampered = general_purpose::STANDARD.encode(raw);
         let result = decrypt_base64(tampered.into(), std::borrow::Cow::Borrowed(PASSWORD));
