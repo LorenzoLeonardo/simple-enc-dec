@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 openssl = "0.10"
 base64 = "0.22"
-ipc-broker = { git = "https://github.com/LorenzoLeonardo/ipc-broker.git", branch = "activate" }
+ipc-broker = "1.1"
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
 serde_json = "1.0"
