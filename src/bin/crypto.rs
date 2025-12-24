@@ -1,5 +1,3 @@
-use std::path::Path;
-
 use chrono::Local;
 use enzo_crypto::crypto::Crypto;
 use fern::Dispatch;
@@ -12,15 +10,33 @@ use tokio::{
 
 const TIMEOUT: u64 = 60;
 
+fn logging_level() -> LevelFilter {
+    // 1. Check for debug files near executable
+    if let Ok(exe_path) = std::env::current_exe()
+        && let Some(dir) = exe_path.parent()
+    {
+        if dir.join("trace").exists() {
+            return LevelFilter::Trace;
+        }
+        if dir.join("debug").exists() {
+            return LevelFilter::Debug;
+        }
+    }
+    match std::env::var("BROKER_DEBUG").as_deref() {
+        Ok("trace") => LevelFilter::Trace,
+        Ok("debug") => LevelFilter::Debug,
+        Ok("info") => LevelFilter::Info,
+        Ok("warn") => LevelFilter::Warn,
+        Ok("error") => LevelFilter::Error,
+        _ => LevelFilter::Info, // default if unset or unknown
+    }
+}
+
 struct LogHandler;
 
 impl LogHandler {
     fn start() -> Self {
-        let level_filter = match (Path::new("trace").exists(), Path::new("debug").exists()) {
-            (true, true) | (true, false) => LevelFilter::Trace,
-            (false, true) => LevelFilter::Debug,
-            (false, false) => LevelFilter::Info, // Default level
-        };
+        let level_filter = logging_level();
 
         if let Err(e) = Dispatch::new()
             .format(move |out, message, record| {
@@ -62,6 +78,7 @@ impl LogHandler {
         let name = env!("CARGO_PKG_NAME");
         let version = env!("CARGO_PKG_VERSION");
         log::info!("{name} {version} has started...");
+        log::debug!("Enabled log {level_filter}.");
         Self
     }
 }
